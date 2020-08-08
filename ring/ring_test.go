@@ -67,13 +67,15 @@ func TestRing_sequential(t *testing.T) {
 		for i := 0; i < ts.loops; i++ {
 
 			seq := randSeq(ts.writeSize)
+			length := r.Len()
 
-			_, err := r.Write([]byte(seq))
+			diff, err := r.Write([]byte(seq))
 			if errors.Is(err, ErrOverflow) {
 
 				for {
 					n, err := r.Read(readSlice)
 					require.NoError(t, err)
+					diff -= n
 
 					if n == 0 {
 						break
@@ -82,7 +84,8 @@ func TestRing_sequential(t *testing.T) {
 					outBuf.Write(readSlice[:n])
 				}
 
-				_, err := r.Write([]byte(seq))
+				n, err := r.Write([]byte(seq))
+				diff += n
 
 				if ts.errWrite != nil {
 					require.True(t, errors.Is(err, ts.errWrite))
@@ -94,12 +97,16 @@ func TestRing_sequential(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			assert.Equal(t, length+diff, r.Len())
 			cmpBuf.WriteString(seq)
 		}
 
 		for {
+			length := r.Len()
 			n, err := r.Read(readSlice)
 			require.NoError(t, err)
+
+			assert.Equal(t, length-n, r.Len())
 
 			if n == 0 {
 				break
