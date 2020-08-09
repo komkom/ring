@@ -1,23 +1,26 @@
 # This pkg implements a non-thread safe ring buffer for buffering a byte stream
 
-A ring buffer can be useful in situations where you have a writer an a reader and you want to keep a bigger junk of memory (>1MB) in ram. Once allocated a ring buffer does not need to allocate additional memory or move bigger junks of data around.
-As seen below this ring buffer has reasonable performance but a ring buffer implementation with a buffered chan in go is still faster.
+A ring buffer is useful in situations where you need a buffered reader. Once allocated a ring buffer does not need to allocate additional memory or move bigger junks of data around.
 
 # Benchmarks
 These are simple benchmarks which calculate an average throughput of data per second.
 
-## BenchmarkChannelImpl-12 	5834.70 MB/s
-A go channel base ring buffer.
+# BenchmarkChannelWithValueImpl  6184.24 MB/s
+A ring buffer based on sending arrays of data. 
 
-## BenchmarkSliceMovingImpl-12  11.89 MB/s
-A ring buffer implementation based on moving data when reading data.
+# BenchmarkChannelWithPtrImpl  249005.02 MB/s
+A ring buffer where the written data is probably not copied because its throughput is incredibly high.
 
-## BenchmarkSliceWithAllocationImpl-12  1267.92 MB/s
+# BenchmarkSliceMovingImpl  11.85 MB/s
+A ring buffer implementation based on moving data after reading data it.
+
+# BenchmarkSliceWithAllocationImpl  1296.94 MB/s
 A ring buffer based on reallocating memory.
 
-## BenchmarkRingImpl-12	 4193.45 MB/s
-This ring buffer implementation.
+# BenchmarkRingImpl  32184.91 MB/s
+The ring buffer in this package.
 
-These benchmarks seem to indicate that a go buffered channel based ring buffer is the best performing one.
+# Conclusion 
+If copying data is not needed when writing it, the channel implementation is unbeatable. If copying data on write is needed then this ring buffer implementations can probably be recommended.
 
 # If you find obvious flaws here please let me know.
