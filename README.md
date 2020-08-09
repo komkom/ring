@@ -18,7 +18,6 @@ A ring buffer based on reallocating memory.
 ## BenchmarkRingImpl-12	 4193.45 MB/s
 This ring buffer implementation.
 
-## The winner go buffered channels
-These benchmarks seem to indicate that a go buffered channel based ring buffer is the best performing.
+These benchmarks seem to indicate that a go buffered channel based ring buffer is the best performing one.
 
 # If you find obvious flaws here please let me know.
