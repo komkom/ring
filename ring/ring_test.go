@@ -122,7 +122,40 @@ func TestRing_sequential(t *testing.T) {
 
 const MB1 = 1000 * 1000
 
-func BenchmarkChannelImpl(b *testing.B) {
+func BenchmarkChannelWithValueImpl(b *testing.B) {
+
+	b.StopTimer()
+
+	const size = 1000
+	ch := make(chan [size]byte, MB1*2)
+
+	tmp := []byte(randSeq(size))
+	data := [size]byte{}
+	copy(data[:], tmp)
+
+	time.Sleep(time.Second)
+	b.StartTimer()
+
+	var counter int
+	for i := 0; i < b.N; i++ {
+
+		if counter < 1000 {
+			for counter < MB1 {
+
+				ch <- data
+				counter += len(data)
+			}
+		}
+
+		d := <-ch
+		counter -= len(d)
+
+		b.SetBytes(int64(len(d)))
+	}
+
+}
+
+func BenchmarkChannelWithPtrImpl(b *testing.B) {
 
 	b.StopTimer()
 
@@ -139,10 +172,7 @@ func BenchmarkChannelImpl(b *testing.B) {
 		if counter < 1000 {
 			for counter < MB1 {
 
-				buf := make([]byte, size)
-				copy(buf, data)
-
-				ch <- buf
+				ch <- data
 				counter += len(data)
 			}
 		}
@@ -222,10 +252,7 @@ func BenchmarkRingImpl(b *testing.B) {
 		if r.Len() <= 1000 {
 			for r.Len() < MB1 {
 
-				buf := make([]byte, size)
-				copy(buf, data)
-
-				_, err := r.Write(buf)
+				_, err := r.Write(data)
 				if err != nil {
 					panic(`write failed`)
 				}
