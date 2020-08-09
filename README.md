@@ -12,10 +12,10 @@ A go channel base ring buffer.
 ## BenchmarkSliceMovingImpl-12  11.89 MB/s
 A ring buffer implementation based on moving data when reading data.
 
-## BenchmarkSliceWithAllocationImpl-12  50.5 ns/op	1267.92 MB/s
+## BenchmarkSliceWithAllocationImpl-12  1267.92 MB/s
 A ring buffer based on reallocating memory.
 
-## BenchmarkRingImpl-12  2385 ns/op	4193.45 MB/s
+## BenchmarkRingImpl-12	 4193.45 MB/s
 This ring buffer implementation.
 
 ## The winner go buffered channels
