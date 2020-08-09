@@ -126,21 +126,35 @@ func BenchmarkChannelImpl(b *testing.B) {
 
 	b.StopTimer()
 
-	data := []byte(letters)
-	ch := make(chan []byte, 1000)
+	size := 10000
+	data := []byte(randSeq(size))
+	ch := make(chan []byte, MB1*2)
 
 	time.Sleep(time.Second)
 	b.StartTimer()
 
+	var counter int
 	for i := 0; i < b.N; i++ {
 
-		ch <- data
+		if counter < 1000 {
+			for counter < MB1 {
+
+				buf := make([]byte, size)
+				copy(buf, data)
+
+				ch <- buf
+				counter += len(data)
+			}
+		}
+
 		d := <-ch
+		counter -= len(d)
+
 		b.SetBytes(int64(len(d)))
 	}
 }
 
-func BenchmarkSliceImpl(b *testing.B) {
+func BenchmarkSliceMovingImpl(b *testing.B) {
 
 	b.StopTimer()
 
@@ -166,21 +180,52 @@ func BenchmarkSliceImpl(b *testing.B) {
 	}
 }
 
+func BenchmarkSliceWithAllocationImpl(b *testing.B) {
+
+	b.StopTimer()
+
+	buf := make([]byte, 0, MB1*5)
+	data := []byte(letters)
+	readBuf := make([]byte, 64)
+
+	time.Sleep(time.Second)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+
+		if len(buf) <= 1000 {
+			for len(buf) < MB1 {
+				buf = append(buf, data...)
+			}
+		}
+
+		copy(readBuf, buf)
+		buf = buf[64:]
+
+		b.SetBytes(int64(len(readBuf)))
+	}
+}
+
 func BenchmarkRingImpl(b *testing.B) {
 
-	r := New(MB1 * 5)
-	data := []byte(randSeq(512))
-	readS := make([]byte, 64)
+	b.StopTimer()
 
-	if len(data) != 512 {
-		panic(`wrong length`)
-	}
+	r := New(MB1 * 5)
+	size := 10000
+	data := []byte(randSeq(size))
+	readS := make([]byte, size)
+
+	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
 
 		if r.Len() <= 1000 {
 			for r.Len() < MB1 {
-				_, err := r.Write(data)
+
+				buf := make([]byte, size)
+				copy(buf, data)
+
+				_, err := r.Write(buf)
 				if err != nil {
 					panic(`write failed`)
 				}
