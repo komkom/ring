@@ -137,6 +137,7 @@ func BenchmarkChannelWithValueImpl(b *testing.B) {
 	b.StartTimer()
 
 	var counter int
+	var n int
 	for i := 0; i < b.N; i++ {
 
 		if counter < 1000 {
@@ -149,9 +150,10 @@ func BenchmarkChannelWithValueImpl(b *testing.B) {
 
 		d := <-ch
 		counter -= len(d)
-
-		b.SetBytes(int64(len(d)))
+		n += len(d)
 	}
+
+	b.SetBytes(int64(n / b.N))
 
 }
 
@@ -167,6 +169,7 @@ func BenchmarkChannelWithPtrImpl(b *testing.B) {
 	b.StartTimer()
 
 	var counter int
+	var n int
 	for i := 0; i < b.N; i++ {
 
 		if counter < 1000 {
@@ -179,9 +182,10 @@ func BenchmarkChannelWithPtrImpl(b *testing.B) {
 
 		d := <-ch
 		counter -= len(d)
-
-		b.SetBytes(int64(len(d)))
+		n += len(d)
 	}
+
+	b.SetBytes(int64(n / b.N))
 }
 
 func BenchmarkSliceMovingImpl(b *testing.B) {
@@ -195,6 +199,7 @@ func BenchmarkSliceMovingImpl(b *testing.B) {
 	time.Sleep(time.Second)
 	b.StartTimer()
 
+	var n int
 	for i := 0; i < b.N; i++ {
 
 		if len(buf) <= 1000 {
@@ -205,9 +210,9 @@ func BenchmarkSliceMovingImpl(b *testing.B) {
 
 		copy(readBuf, buf)
 		buf = append(buf[:0], buf[64:]...)
-
-		b.SetBytes(int64(len(readBuf)))
+		n += len(readBuf)
 	}
+	b.SetBytes(int64(n / b.N))
 }
 
 func BenchmarkSliceWithAllocationImpl(b *testing.B) {
@@ -221,6 +226,7 @@ func BenchmarkSliceWithAllocationImpl(b *testing.B) {
 	time.Sleep(time.Second)
 	b.StartTimer()
 
+	var n int
 	for i := 0; i < b.N; i++ {
 
 		if len(buf) <= 1000 {
@@ -231,9 +237,9 @@ func BenchmarkSliceWithAllocationImpl(b *testing.B) {
 
 		copy(readBuf, buf)
 		buf = buf[64:]
-
-		b.SetBytes(int64(len(readBuf)))
+		n += len(readBuf)
 	}
+	b.SetBytes(int64(n / b.N))
 }
 
 func BenchmarkRingImpl(b *testing.B) {
@@ -247,6 +253,7 @@ func BenchmarkRingImpl(b *testing.B) {
 
 	b.StartTimer()
 
+	var n int
 	for i := 0; i < b.N; i++ {
 
 		if r.Len() <= 1000 {
@@ -259,11 +266,11 @@ func BenchmarkRingImpl(b *testing.B) {
 			}
 		}
 
-		n, err := r.Read(readS)
+		c, err := r.Read(readS)
 		if err != nil {
 			panic(`read failed`)
 		}
-
-		b.SetBytes(int64(n))
+		n += c
 	}
+	b.SetBytes(int64(n / b.N))
 }
